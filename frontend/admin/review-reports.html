@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Reports - CiviSure Admin</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚨 CiviSure Admin</h2>
+            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="admin-dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="review-reports.html" class="active">📝 Review Reports</a></li>
+                    <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Review Crime Reports</h1>
+                <button class="btn btn-secondary" onclick="window.location.href='admin-dashboard.html'">Back to Dashboard</button>
+            </div>
+
+            <div class="content-area">
+                <div class="filters">
+                    <div class="filters-grid">
+                        <div class="form-group">
+                            <label for="statusFilter">Filter by Status</label>
+                            <select id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="investigating">Investigating</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoryFilter">Filter by Category</label>
+                            <select id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="Theft">Theft/Robbery</option>
+                                <option value="Assault">Assault</option>
+                                <option value="Vandalism">Vandalism</option>
+                                <option value="Harassment">Harassment</option>
+                                <option value="Fraud">Fraud</option>
+                                <option value="Drug">Drug-related</option>
+                                <option value="Traffic">Traffic Violations</option>
+                                <option value="Domestic">Domestic Violence</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Reports</h2>
+                        <div id="reportCount"></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Anonymous</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTable">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; padding: 2rem;">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="reportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Report Details</h3>
+                <button class="modal-close" onclick="utils.hideModal('reportModal')">×</button>
+            </div>
+            <div class="modal-body" id="reportDetails">
+                Loading...
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="utils.hideModal('reportModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        (async () => {
+            await auth.requireAdmin();
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
+        });
+
+        async function loadReports() {
+            const status = document.getElementById('statusFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+
+            try {
+                const response = await fetch(`/api/reports?status=${status}&category=${category}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('reportCount').textContent = `${data.reports.length} reports`;
+                    displayReports(data.reports);
+                }
+            } catch (error) {
+                console.error('Load reports error:', error);
+                utils.showToast('Failed to load reports', 'error');
+            }
+        }
+
+        function displayReports(reports) {
+            const tbody = document.getElementById('reportsTable');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">No reports found</td></tr>';
+                return;
+            }
+
+            reports.forEach(report => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${report.id}</td>
+                    <td>${report.category}</td>
+                    <td>${report.description.substring(0, 50)}...</td>
+                    <td>${report.location_address || 'N/A'}</td>
+                    <td>
+                        <select class="badge badge-${report.status === 'resolved' ? 'success' : report.status === 'pending' ? 'warning' : 'primary'}" 
+                                onchange="updateStatus(${report.id}, this.value)" 
+                                style="border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.5rem;">
+                            <option value="pending" ${report.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="investigating" ${report.status === 'investigating' ? 'selected' : ''}>Investigating</option>
+                            <option value="resolved" ${report.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                            <option value="rejected" ${report.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        </select>
+                    </td>
+                    <td>${report.anonymous ? 'Yes' : 'No'}</td>
+                    <td>${new Date(report.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="viewReportDetails(${report.id})">View</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateStatus(reportId, newStatus) {
+            try {
+                const response = await fetch(`/api/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    utils.showToast('Status updated successfully', 'success');
+                    loadReports();
+                } else {
+                    utils.showToast('Failed to update status', 'error');
+                }
+            } catch (error) {
+                console.error('Update status error:', error);
+                utils.showToast('An error occurred', 'error');
+            }
+        }
+
+        async function viewReportDetails(reportId) {
+            try {
+                const response = await fetch(`/api/reports/${reportId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const report = data.report;
+                    document.getElementById('reportDetails').innerHTML = `
+                        <div style="line-height: 1.8;">
+                            <p><strong>Report ID:</strong> #${report.id}</p>
+                            <p><strong>Category:</strong> ${report.category}</p>
+                            <p><strong>Description:</strong><br>${report.description}</p>
+                            <p><strong>Location:</strong> ${report.location_address || 'Not specified'}</p>
+                            <p><strong>Date/Time:</strong> ${new Date(report.date_time).toLocaleString()}</p>
+                            <p><strong>Status:</strong> <span class="badge badge-${report.status === 'resolved' ? 'success' : 'warning'}">${report.status}</span></p>
+                            <p><strong>Anonymous:</strong> ${report.anonymous ? 'Yes' : 'No'}</p>
+                            ${!report.anonymous && report.reporter_name ? `<p><strong>Reporter:</strong> ${report.reporter_name} (${report.reporter_email})</p>` : ''}
+                            ${report.evidence_files && report.evidence_files.length > 0 ? `
+                                <p><strong>Evidence Files:</strong></p>
+                                <ul>
+                                    ${report.evidence_files.map(file => `<li><a href="/uploads/${file}" target="_blank">${file}</a></li>`).join('')}
+                                </ul>
+                            ` : ''}
+                            <p><strong>Submitted:</strong> ${new Date(report.created_at).toLocaleString()}</p>
+                        </div>
+                    `;
+                    utils.showModal('reportModal');
+                }
+            } catch (error) {
+                console.error('View report error:', error);
+                utils.showToast('Failed to load report details', 'error');
+            }
+        }
+
+        document.getElementById('applyFilters').addEventListener('click', loadReports);
+
+        loadReports();
+    </script>
+</body>
+</html>

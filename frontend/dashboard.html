@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CiviSure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚨 CiviSure</h2>
+                <p id="userName" style="color: #9ca3af; font-size: 0.875rem;"></p>
+            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html" class="active">📊 Dashboard</a></li>
+                    <li><a href="report-crime.html">📝 Report Crime</a></li>
+                    <li><a href="sos.html">🆘 SOS Alert</a></li>
+                    <li><a href="crime-map.html">🗺️ Crime Map</a></li>
+                    <li><a href="legal-chatbot.html">⚖️ Legal Assistant</a></li>
+                    <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Dashboard</h1>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="window.location.href='report-crime.html'">Report Crime</button>
+                    <button class="btn btn-danger" onclick="window.location.href='sos.html'">SOS</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card" style="cursor: pointer;" onclick="window.location.href='report-crime.html'">
+                        <h3>Report Crime</h3>
+                        <div class="number">📝</div>
+                        <p>Submit anonymous crime reports</p>
+                    </div>
+                    <div class="dashboard-card" style="cursor: pointer;" onclick="window.location.href='sos.html'">
+                        <h3>Emergency SOS</h3>
+                        <div class="number">🆘</div>
+                        <p>Send instant alert with location</p>
+                    </div>
+                    <div class="dashboard-card" style="cursor: pointer;" onclick="window.location.href='crime-map.html'">
+                        <h3>Crime Map</h3>
+                        <div class="number">🗺️</div>
+                        <p>View crime zones in your area</p>
+                    </div>
+                    <div class="dashboard-card" style="cursor: pointer;" onclick="window.location.href='legal-chatbot.html'">
+                        <h3>Legal Help</h3>
+                        <div class="number">⚖️</div>
+                        <p>Get AI-powered legal guidance</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Welcome to CiviSure</h2>
+                    </div>
+                    <div class="card-body">
+                        <p>CiviSure is your platform for public safety. Here's what you can do:</p>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #10b981; font-weight: bold;">✓</span>
+                                <strong>Report Crimes Anonymously:</strong> Submit crime reports without revealing your identity
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #10b981; font-weight: bold;">✓</span>
+                                <strong>Send SOS Alerts:</strong> Emergency distress signals with automatic location sharing
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #10b981; font-weight: bold;">✓</span>
+                                <strong>View Crime Maps:</strong> Interactive maps showing crime hotspots in your area
+                            </li>
+                            <li style="padding: 0.5rem 0; padding-left: 1.5rem; position: relative;">
+                                <span style="position: absolute; left: 0; color: #10b981; font-weight: bold;">✓</span>
+                                <strong>Get Legal Guidance:</strong> AI-powered assistance for human rights and legal procedures
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Safety Tips</h2>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div style="padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                                <h4>🔒 Stay Aware</h4>
+                                <p style="margin: 0; font-size: 0.875rem;">Always be conscious of your surroundings, especially in unfamiliar areas</p>
+                            </div>
+                            <div style="padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                                <h4>📞 Emergency Contacts</h4>
+                                <p style="margin: 0; font-size: 0.875rem;">Keep emergency numbers saved: 911 for police, fire, ambulance</p>
+                            </div>
+                            <div style="padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                                <h4>👥 Share Location</h4>
+                                <p style="margin: 0; font-size: 0.875rem;">Share your location with trusted contacts when traveling alone</p>
+                            </div>
+                            <div style="padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                                <h4>💡 Trust Your Instincts</h4>
+                                <p style="margin: 0; font-size: 0.875rem;">If something feels wrong, trust your gut and seek help</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        (async () => {
+            const user = await auth.requireAuth();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+            }
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
+        });
+    </script>
+</body>
+</html>

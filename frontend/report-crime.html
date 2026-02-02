@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Crime - CiviSure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚨 CiviSure</h2>
+            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="report-crime.html" class="active">📝 Report Crime</a></li>
+                    <li><a href="sos.html">🆘 SOS Alert</a></li>
+                    <li><a href="crime-map.html">🗺️ Crime Map</a></li>
+                    <li><a href="legal-chatbot.html">⚖️ Legal Assistant</a></li>
+                    <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Report Crime</h1>
+                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+            </div>
+
+            <div class="content-area">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Submit Crime Report</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="reportForm">
+                            <div class="form-group">
+                                <label for="category">Crime Category *</label>
+                                <select id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Theft">Theft/Robbery</option>
+                                    <option value="Assault">Assault</option>
+                                    <option value="Vandalism">Vandalism</option>
+                                    <option value="Harassment">Harassment</option>
+                                    <option value="Fraud">Fraud</option>
+                                    <option value="Drug">Drug-related</option>
+                                    <option value="Traffic">Traffic Violations</option>
+                                    <option value="Domestic">Domestic Violence</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Description *</label>
+                                <textarea id="description" name="description" required placeholder="Describe what happened in detail..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dateTime">Date & Time of Incident *</label>
+                                <input type="datetime-local" id="dateTime" name="dateTime" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="locationAddress">Location Address</label>
+                                <input type="text" id="locationAddress" name="locationAddress" placeholder="Enter address or use current location">
+                                <button type="button" class="btn btn-secondary btn-small" id="useCurrentLocation" style="margin-top: 0.5rem;">
+                                    📍 Use Current Location
+                                </button>
+                            </div>
+
+                            <input type="hidden" id="locationLat" name="locationLat">
+                            <input type="hidden" id="locationLng" name="locationLng">
+
+                            <div class="form-group">
+                                <label>Upload Evidence (Optional)</label>
+                                <div class="file-upload" id="fileUpload">
+                                    <div class="file-upload-icon">📎</div>
+                                    <p class="file-upload-text">Click to upload images, videos, or documents</p>
+                                    <input type="file" id="evidence" name="evidence" multiple accept="image/*,video/*,.pdf">
+                                </div>
+                                <div id="fileList" class="file-list"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox">
+                                    <input type="checkbox" id="anonymous" name="anonymous" checked>
+                                    <span>Submit this report anonymously (recommended)</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <span class="btn-text">Submit Report</span>
+                                <span class="btn-loader" style="display: none;">Submitting...</span>
+                            </button>
+
+                            <div id="reportMessage" class="message" style="display: none;"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        (async () => {
+            await auth.requireAuth();
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
+        });
+
+        document.getElementById('fileUpload').addEventListener('click', () => {
+            document.getElementById('evidence').click();
+        });
+
+        let selectedFiles = [];
+        document.getElementById('evidence').addEventListener('change', (e) => {
+            selectedFiles = Array.from(e.target.files);
+            displayFiles();
+        });
+
+        function displayFiles() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>${file.name} (${utils.formatFileSize(file.size)})</span>
+                    <span class="file-item-remove" onclick="removeFile(${index})">✕</span>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            displayFiles();
+        }
+
+        document.getElementById('useCurrentLocation').addEventListener('click', async () => {
+            try {
+                const location = await utils.getCurrentLocation();
+                document.getElementById('locationLat').value = location.lat;
+                document.getElementById('locationLng').value = location.lng;
+                
+                const address = await utils.reverseGeocode(location.lat, location.lng);
+                document.getElementById('locationAddress').value = address;
+                
+                utils.showToast('Location captured successfully', 'success');
+            } catch (error) {
+                console.error('Location error:', error);
+                utils.showToast('Unable to get location. Please enter manually.', 'error');
+            }
+        });
+
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+            const messageDiv = document.getElementById('reportMessage');
+
+            if (!form.locationLat.value || !form.locationLng.value) {
+                utils.showToast('Please provide location information', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('category', form.category.value);
+            formData.append('description', form.description.value);
+            formData.append('dateTime', form.dateTime.value);
+            formData.append('locationLat', form.locationLat.value);
+            formData.append('locationLng', form.locationLng.value);
+            formData.append('locationAddress', form.locationAddress.value);
+            formData.append('anonymous', form.anonymous.checked);
+
+            selectedFiles.forEach(file => {
+                formData.append('evidence', file);
+            });
+
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'inline';
+
+            try {
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageDiv.textContent = 'Crime report submitted successfully!';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+                    
+                    form.reset();
+                    selectedFiles = [];
+                    displayFiles();
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    messageDiv.textContent = data.message || 'Failed to submit report';
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                    
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnLoader.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Submit error:', error);
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+                
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

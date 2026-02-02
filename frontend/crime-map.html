@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime Map - CiviSure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚨 CiviSure</h2>
+            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="report-crime.html">📝 Report Crime</a></li>
+                    <li><a href="sos.html">🆘 SOS Alert</a></li>
+                    <li><a href="crime-map.html" class="active">🗺️ Crime Map</a></li>
+                    <li><a href="legal-chatbot.html">⚖️ Legal Assistant</a></li>
+                    <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Crime Zone Map</h1>
+                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+            </div>
+
+            <div class="content-area">
+                <div class="filters">
+                    <div class="filters-grid">
+                        <div class="form-group">
+                            <label for="categoryFilter">Filter by Category</label>
+                            <select id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="Theft">Theft/Robbery</option>
+                                <option value="Assault">Assault</option>
+                                <option value="Vandalism">Vandalism</option>
+                                <option value="Harassment">Harassment</option>
+                                <option value="Fraud">Fraud</option>
+                                <option value="Drug">Drug-related</option>
+                                <option value="Traffic">Traffic Violations</option>
+                                <option value="Domestic">Domestic Violence</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="daysFilter">Time Period</label>
+                            <select id="daysFilter">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="365">Last year</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Crime Distribution Map</h2>
+                        <div id="crimeCount" style="color: #6b7280;"></div>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div id="map" class="map-container"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Legend</h2>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.5rem;">🔴</span>
+                                <span>Theft/Robbery</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.5rem;">🟠</span>
+                                <span>Assault</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.5rem;">🟡</span>
+                                <span>Vandalism</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.5rem;">🟢</span>
+                                <span>Other</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        (async () => {
+            await auth.requireAuth();
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
+        });
+
+        let map;
+        let markers = [];
+
+        function initMap() {
+            map = L.map('map').setView([40.7128, -74.0060], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    map.setView([position.coords.latitude, position.coords.longitude], 13);
+                });
+            }
+        }
+
+        function getCrimeIcon(category) {
+            const icons = {
+                'Theft': '🔴',
+                'Assault': '🟠',
+                'Vandalism': '🟡',
+                'Harassment': '🟣',
+                'Fraud': '🔵',
+                'Drug': '⚫',
+                'Traffic': '🟤',
+                'Domestic': '🔴',
+                'Other': '🟢'
+            };
+
+            return L.divIcon({
+                html: icons[category] || '⚫',
+                className: 'crime-marker',
+                iconSize: [30, 30]
+            });
+        }
+
+        async function loadCrimeData() {
+            const category = document.getElementById('categoryFilter').value;
+            const days = document.getElementById('daysFilter').value;
+
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            try {
+                const response = await fetch(`/api/reports/map?category=${category}&days=${days}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('crimeCount').textContent = `Showing ${data.reports.length} reports`;
+
+                    data.reports.forEach(report => {
+                        const marker = L.marker(
+                            [report.location_lat, report.location_lng],
+                            { icon: getCrimeIcon(report.category) }
+                        ).addTo(map);
+
+                        marker.bindPopup(`
+                            <div style="min-width: 200px;">
+                                <h4 style="margin-bottom: 0.5rem;">${report.category}</h4>
+                                <p style="margin-bottom: 0.5rem; font-size: 0.875rem;">${report.location_address || 'Location not specified'}</p>
+                                <p style="margin: 0; font-size: 0.75rem; color: #6b7280;">${new Date(report.date_time).toLocaleString()}</p>
+                                <span class="badge badge-${report.status === 'resolved' ? 'success' : 'warning'}" style="margin-top: 0.5rem; display: inline-block;">${report.status}</span>
+                            </div>
+                        `);
+
+                        markers.push(marker);
+                    });
+                }
+            } catch (error) {
+                console.error('Load crime data error:', error);
+                utils.showToast('Failed to load crime data', 'error');
+            }
+        }
+
+        initMap();
+        loadCrimeData();
+
+        document.getElementById('applyFilters').addEventListener('click', loadCrimeData);
+    </script>
+</body>
+</html>
