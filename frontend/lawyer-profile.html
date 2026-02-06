@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lawyer Profile - CiviSure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .profile-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 2rem;
+        }
+        .profile-info h1 {
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-box h3 {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .stat-box p {
+            color: rgba(255,255,255,0.9);
+            margin: 0;
+            font-size: 0.875rem;
+        }
+        .review-card {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .stars {
+            color: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚨 CiviSure</h2>
+            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="report-crime.html">📝 Report Crime</a></li>
+                    <li><a href="sos.html">🆘 SOS Alert</a></li>
+                    <li><a href="crime-map.html">🗺️ Crime Map</a></li>
+                    <li><a href="legal-chatbot.html">⚖️ Legal Assistant</a></li>
+                    <li><a href="lawyers.html" class="active">👨‍⚖️ Find Lawyers</a></li>
+                    <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Lawyer Profile</h1>
+                <button class="btn btn-secondary" onclick="window.location.href='lawyers.html'">Back to Lawyers</button>
+            </div>
+
+            <div class="content-area">
+                <div class="profile-header" id="profileHeader">
+                    <div style="text-align: center; padding: 2rem;">
+                        <div class="spinner"></div>
+                        <p>Loading profile...</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <div class="card" id="aboutSection">
+                            <div class="card-header">
+                                <h2 class="card-title">About</h2>
+                            </div>
+                            <div class="card-body" id="aboutContent"></div>
+                        </div>
+
+                        <div class="card" id="reviewsSection">
+                            <div class="card-header">
+                                <h2 class="card-title">Reviews</h2>
+                            </div>
+                            <div class="card-body" id="reviewsContent"></div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Write a Review</h2>
+                            </div>
+                            <div class="card-body">
+                                <form id="reviewForm">
+                                    <div class="form-group">
+                                        <label>Rating *</label>
+                                        <div style="display: flex; gap: 0.5rem; font-size: 2rem;">
+                                            <span class="star-rating" data-rating="1">☆</span>
+                                            <span class="star-rating" data-rating="2">☆</span>
+                                            <span class="star-rating" data-rating="3">☆</span>
+                                            <span class="star-rating" data-rating="4">☆</span>
+                                            <span class="star-rating" data-rating="5">☆</span>
+                                        </div>
+                                        <input type="hidden" id="rating" name="rating" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="reviewText">Your Review</label>
+                                        <textarea id="reviewText" name="reviewText" rows="4" placeholder="Share your experience with this lawyer..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                                    <div id="reviewMessage" class="message" style="display: none;"></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="card" id="consultation">
+                            <div class="card-header">
+                                <h2 class="card-title">Request Consultation</h2>
+                            </div>
+                            <div class="card-body">
+                                <form id="consultationForm">
+                                    <div class="form-group">
+                                        <label for="caseType">Case Type *</label>
+                                        <input type="text" id="caseType" name="caseType" required placeholder="e.g., Property Dispute">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="description">Case Description *</label>
+                                        <textarea id="description" name="description" required rows="5" placeholder="Describe your legal issue in detail..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="preferredDate">Preferred Date</label>
+                                        <input type="datetime-local" id="preferredDate" name="preferredDate">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">Send Request</button>
+                                    <div id="consultationMessage" class="message" style="display: none;"></div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Contact Information</h2>
+                            </div>
+                            <div class="card-body" id="contactInfo"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        (async () => {
+            await auth.requireAuth();
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const lawyerId = urlParams.get('id');
+
+        if (!lawyerId) {
+            window.location.href = 'lawyers.html';
+        }
+
+        let selectedRating = 0;
+
+        document.querySelectorAll('.star-rating').forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.rating);
+                document.getElementById('rating').value = selectedRating;
+                
+                document.querySelectorAll('.star-rating').forEach((s, index) => {
+                    s.textContent = index < selectedRating ? '★' : '☆';
+                    s.style.color = index < selectedRating ? '#f59e0b' : '#d1d5db';
+                });
+            });
+        });
+
+        function renderStars(rating) {
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+            const emptyStars = 5 - fullStars - halfStar;
+            
+            return '★'.repeat(fullStars) + (halfStar ? '☆' : '') + '☆'.repeat(emptyStars);
+        }
+
+        async function loadLawyerProfile() {
+            try {
+                const response = await fetch(`/api/lawyers/${lawyerId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayProfile(data.lawyer);
+                    displayReviews(data.reviews);
+                } else {
+                    utils.showToast('Lawyer not found', 'error');
+                    setTimeout(() => window.location.href = 'lawyers.html', 2000);
+                }
+            } catch (error) {
+                console.error('Load profile error:', error);
+                utils.showToast('Failed to load lawyer profile', 'error');
+            }
+        }
+
+        function displayProfile(lawyer) {
+            document.getElementById('profileHeader').innerHTML = `
+                <div class="profile-main">
+                    <div class="profile-info">
+                        <h1>${lawyer.full_name}</h1>
+                        <p style="font-size: 1.25rem; margin: 0;">${lawyer.specialization}</p>
+                        <p style="margin: 0.5rem 0; opacity: 0.9;">
+                            <span class="stars" style="font-size: 1.5rem;">${renderStars(lawyer.rating)}</span>
+                            ${lawyer.rating.toFixed(1)} ⭐ (${lawyer.total_reviews} reviews)
+                        </p>
+                    </div>
+                    <div>
+                        <button class="btn btn-large" style="background: white; color: #2563eb;" onclick="document.getElementById('consultation').scrollIntoView({behavior: 'smooth'})">
+                            Request Consultation
+                        </button>
+                    </div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-box">
+                        <h3>${lawyer.experience_years}</h3>
+                        <p>Years Experience</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>₹${lawyer.consultation_fee}</h3>
+                        <p>Consultation Fee</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>${lawyer.availability}</h3>
+                        <p>Availability</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('aboutContent').innerHTML = `
+                <div style="line-height: 1.8;">
+                    <h3>Biography</h3>
+                    <p>${lawyer.bio}</p>
+                    
+                    <h3 style="margin-top: 2rem;">Education</h3>
+                    <p>${lawyer.education}</p>
+                    
+                    <h3 style="margin-top: 2rem;">Bar Registration</h3>
+                    <p>${lawyer.bar_registration}</p>
+                    
+                    <h3 style="margin-top: 2rem;">Languages</h3>
+                    <p>${lawyer.languages}</p>
+                </div>
+            `;
+
+            document.getElementById('contactInfo').innerHTML = `
+                <div style="line-height: 2;">
+                    <p><strong>📧 Email:</strong><br>${lawyer.email}</p>
+                    <p><strong>📞 Phone:</strong><br>${lawyer.phone}</p>
+                    <p><strong>📍 Office Address:</strong><br>${lawyer.office_address}<br>${lawyer.city}, ${lawyer.state}</p>
+                </div>
+            `;
+        }
+
+        function displayReviews(reviews) {
+            const reviewsContent = document.getElementById('reviewsContent');
+
+            if (reviews.length === 0) {
+                reviewsContent.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">No reviews yet. Be the first to review!</p>';
+                return;
+            }
+
+            reviewsContent.innerHTML = reviews.map(review => `
+                <div class="review-card">
+                    <div class="review-header">
+                        <strong>${review.user_name}</strong>
+                        <span class="stars">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</span>
+                    </div>
+                    ${review.review_text ? `<p style="margin: 0; color: #6b7280;">${review.review_text}</p>` : ''}
+                    <small style="color: #9ca3af;">${new Date(review.created_at).toLocaleDateString()}</small>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (selectedRating === 0) {
+                utils.showToast('Please select a rating', 'error');
+                return;
+            }
+
+            const form = e.target;
+            const messageDiv = document.getElementById('reviewMessage');
+
+            const formData = {
+                rating: selectedRating,
+                reviewText: form.reviewText.value
+            };
+
+            try {
+                const response = await fetch(`/api/lawyers/${lawyerId}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageDiv.textContent = 'Review submitted successfully!';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+                    form.reset();
+                    selectedRating = 0;
+                    document.querySelectorAll('.star-rating').forEach(s => {
+                        s.textContent = '☆';
+                        s.style.color = '#d1d5db';
+                    });
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    messageDiv.textContent = data.message || 'Failed to submit review';
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Submit review error:', error);
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        document.getElementById('consultationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const form = e.target;
+            const messageDiv = document.getElementById('consultationMessage');
+
+            const formData = {
+                caseType: form.caseType.value,
+                description: form.description.value,
+                preferredDate: form.preferredDate.value
+            };
+
+            try {
+                const response = await fetch(`/api/lawyers/${lawyerId}/consultation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    messageDiv.textContent = 'Consultation request sent successfully! The lawyer will contact you soon.';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+                    form.reset();
+                } else {
+                    messageDiv.textContent = data.message || 'Failed to send request';
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Consultation request error:', error);
+                messageDiv.textContent = 'An error occurred. Please try again.';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        loadLawyerProfile();
+    </script>
+</body>
+</html>

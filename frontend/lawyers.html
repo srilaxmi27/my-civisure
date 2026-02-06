@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Lawyers - CiviSure</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .lawyer-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .lawyer-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .lawyer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .lawyer-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: #2563eb;
+        }
+        .lawyer-specialization {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .lawyer-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stars {
+            color: #f59e0b;
+            font-size: 1.25rem;
+        }
+        .lawyer-details {
+            margin: 1rem 0;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .lawyer-details p {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .lawyer-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚨 CiviSure</h2>
+            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html">📊 Dashboard</a></li>
+                    <li><a href="report-crime.html">📝 Report Crime</a></li>
+                    <li><a href="sos.html">🆘 SOS Alert</a></li>
+                    <li><a href="crime-map.html">🗺️ Crime Map</a></li>
+                    <li><a href="legal-chatbot.html">⚖️ Legal Assistant</a></li>
+                    <li><a href="lawyers.html" class="active">👨‍⚖️ Find Lawyers</a></li>
+                    <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Find Legal Experts</h1>
+                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+            </div>
+
+            <div class="content-area">
+                <div class="filters">
+                    <h3>Search & Filter Lawyers</h3>
+                    <div class="filters-grid">
+                        <div class="form-group">
+                            <label for="searchInput">Search by Name</label>
+                            <input type="text" id="searchInput" placeholder="Enter lawyer name...">
+                        </div>
+                        <div class="form-group">
+                            <label for="specializationFilter">Specialization</label>
+                            <select id="specializationFilter">
+                                <option value="">All Specializations</option>
+                                <option value="Criminal Law">Criminal Law</option>
+                                <option value="Domestic Violence">Domestic Violence</option>
+                                <option value="Government Cases">Government Cases</option>
+                                <option value="Cyber Crime">Cyber Crime</option>
+                                <option value="Property Disputes">Property Disputes</option>
+                                <option value="Consumer Rights">Consumer Rights</option>
+                                <option value="Corporate Law">Corporate Law</option>
+                                <option value="Family Law">Family Law</option>
+                                <option value="Tax Law">Tax Law</option>
+                                <option value="Labour Law">Labour Law</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cityFilter">City</label>
+                            <input type="text" id="cityFilter" placeholder="Enter city...">
+                        </div>
+                        <div class="form-group">
+                            <label for="ratingFilter">Minimum Rating</label>
+                            <select id="ratingFilter">
+                                <option value="">Any Rating</option>
+                                <option value="4.5">4.5+ Stars</option>
+                                <option value="4.0">4.0+ Stars</option>
+                                <option value="3.5">3.5+ Stars</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn btn-primary" id="applyFilters">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Available Lawyers</h2>
+                        <div id="lawyerCount"></div>
+                    </div>
+                    <div class="card-body" id="lawyersContainer">
+                        <div style="text-align: center; padding: 2rem;">
+                            <div class="spinner"></div>
+                            <p>Loading lawyers...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        (async () => {
+            await auth.requireAuth();
+        })();
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
+        });
+
+        function renderStars(rating) {
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+            const emptyStars = 5 - fullStars - halfStar;
+            
+            return '★'.repeat(fullStars) + (halfStar ? '☆' : '') + '☆'.repeat(emptyStars);
+        }
+
+        async function loadLawyers() {
+            const search = document.getElementById('searchInput').value;
+            const specialization = document.getElementById('specializationFilter').value;
+            const city = document.getElementById('cityFilter').value;
+            const minRating = document.getElementById('ratingFilter').value;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (specialization) params.append('specialization', specialization);
+            if (city) params.append('city', city);
+            if (minRating) params.append('minRating', minRating);
+
+            try {
+                const response = await fetch(`/api/lawyers?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('lawyerCount').textContent = `${data.lawyers.length} lawyers found`;
+                    displayLawyers(data.lawyers);
+                }
+            } catch (error) {
+                console.error('Load lawyers error:', error);
+                utils.showToast('Failed to load lawyers', 'error');
+            }
+        }
+
+        function displayLawyers(lawyers) {
+            const container = document.getElementById('lawyersContainer');
+            
+            if (lawyers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👨‍⚖️</div>
+                        <h3>No lawyers found</h3>
+                        <p>Try adjusting your search filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = lawyers.map(lawyer => `
+                <div class="lawyer-card">
+                    <div class="lawyer-header">
+                        <div class="lawyer-info">
+                            <h3>${lawyer.full_name}</h3>
+                            <span class="lawyer-specialization">${lawyer.specialization}</span>
+                        </div>
+                        <div class="lawyer-rating">
+                            <span class="stars">${renderStars(lawyer.rating)}</span>
+                            <span>${lawyer.rating.toFixed(1)} (${lawyer.total_reviews} reviews)</span>
+                        </div>
+                    </div>
+
+                    <p style="color: #6b7280; margin: 1rem 0;">${lawyer.bio}</p>
+
+                    <div class="lawyer-details">
+                        <p>📚 <strong>Experience:</strong> ${lawyer.experience_years} years</p>
+                        <p>🎓 <strong>Education:</strong> ${lawyer.education}</p>
+                        <p>📋 <strong>Bar Registration:</strong> ${lawyer.bar_registration}</p>
+                        <p>📍 <strong>Location:</strong> ${lawyer.city}, ${lawyer.state}</p>
+                        <p>🗣️ <strong>Languages:</strong> ${lawyer.languages}</p>
+                        <p>💰 <strong>Consultation Fee:</strong> ₹${lawyer.consultation_fee}</p>
+                        <p>📅 <strong>Availability:</strong> <span style="color: ${lawyer.availability === 'Available' ? '#10b981' : '#f59e0b'};">${lawyer.availability}</span></p>
+                    </div>
+
+                    <div class="lawyer-actions">
+                        <button class="btn btn-primary" onclick="viewLawyerProfile(${lawyer.id})">View Full Profile</button>
+                        <button class="btn btn-secondary" onclick="requestConsultation(${lawyer.id})">Request Consultation</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewLawyerProfile(lawyerId) {
+            window.location.href = `lawyer-profile.html?id=${lawyerId}`;
+        }
+
+        function requestConsultation(lawyerId) {
+            window.location.href = `lawyer-profile.html?id=${lawyerId}#consultation`;
+        }
+
+        document.getElementById('applyFilters').addEventListener('click', loadLawyers);
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadLawyers();
+        });
+
+        loadLawyers();
+    </script>
+</body>
+</html>
