@@ -167,7 +167,8 @@ function insertDefaultUsers() {
 
     console.log('Default users created!');
 }
-    // Insert sample lawyers (for testing)
+
+// Insert sample lawyers (for testing)
 function insertSampleLawyers() {
     const lawyers = [
         {
